@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>countdown</title>
+<style>
+  :root {
+    --void:    #0a0a0f;
+    --text:    #eef0fb;
+    --dim:     #6b6d85;
+    --mauve:   #c4a7f5;
+    --blue:    #7dabf8;
+    --green:   #8fe3b0;
+    --line:    rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--void);
+    overflow: hidden;
+  }
+
+  body {
+    color: var(--text);
+    font-family: 'SF Mono', ui-monospace, 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .field {
+    position: fixed;
+    inset: -10%;
+    width: 120%;
+    height: 120%;
+    background:
+      radial-gradient(ellipse 900px 600px at 18% 15%, rgba(196,167,245,0.14), transparent 60%),
+      radial-gradient(ellipse 800px 700px at 85% 85%, rgba(125,171,248,0.12), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 50% 100%, rgba(143,227,176,0.07), transparent 60%),
+      var(--void);
+    z-index: 0;
+    animation: drift 28s ease-in-out infinite;
+  }
+
+  @keyframes drift {
+    0%   { background-position: 0% 0%, 0% 0%, 0% 0%; transform: translate(0%, 0%) scale(1); }
+    25%  { transform: translate(-2%, 1.5%) scale(1.04); }
+    50%  { transform: translate(1.5%, -2%) scale(1.02); }
+    75%  { transform: translate(-1%, -1%) scale(1.05); }
+    100% { transform: translate(0%, 0%) scale(1); }
+  }
+
+  .field::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 700px 500px at 70% 25%, rgba(125,171,248,0.10), transparent 55%),
+      radial-gradient(ellipse 650px 550px at 25% 75%, rgba(196,167,245,0.10), transparent 55%);
+    animation: drift-alt 34s ease-in-out infinite reverse;
+    mix-blend-mode: screen;
+  }
+
+  @keyframes drift-alt {
+    0%   { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
+    33%  { transform: translate(2%, -1.5%) scale(1.06); opacity: 1; }
+    66%  { transform: translate(-1.5%, 2%) scale(1.03); opacity: 0.85; }
+    100% { transform: translate(0%, 0%) scale(1); opacity: 0.8; }
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    opacity: 0.035;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 50%;
+    opacity: 0.25;
+    animation: twinkle 4s ease-in-out infinite, float 22s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.5; }
+  }
+  @keyframes float {
+    0%   { transform: translate(0, 0); }
+    50%  { transform: translate(6px, -10px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .stage {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 780px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 40px;
+    font-weight: 500;
+  }
+
+  .grid {
+    display: flex;
+    justify-content: center;
+    gap: clamp(14px, 4vw, 36px);
+    margin-bottom: 48px;
+  }
+
+  .unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .num {
+    font-size: clamp(48px, 11vw, 92px);
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    background: linear-gradient(180deg, var(--text) 0%, rgba(238,240,251,0.75) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .unit.days .num { background: linear-gradient(180deg, var(--mauve), rgba(196,167,245,0.6)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .unit.hours .num { background: linear-gradient(180deg, var(--blue), rgba(125,171,248,0.6)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .unit.mins .num, .unit.secs .num { background: linear-gradient(180deg, var(--text), rgba(238,240,251,0.55)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .sep {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 200;
+    color: var(--dim);
+    align-self: flex-start;
+    margin-top: clamp(8px, 2vw, 18px);
+    opacity: 0.4;
+  }
+
+  .lbl {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .progress-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .progress-track {
+    height: 2px;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mauve), var(--blue), var(--green));
+    border-radius: 2px;
+    transition: width 1s ease;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 12px 2px rgba(143,227,176,0.7);
+  }
+
+  .progress-caption {
+    display: flex;
+    justify-content: center;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    margin-top: 14px;
+    text-transform: uppercase;
+  }
+
+  .progress-caption .pct {
+    color: var(--text);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .done .grid, .done .progress-wrap, .done .eyebrow { display: none; }
+  .done-msg {
+    display: none;
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .done .done-msg { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .star, .field, .field::before { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="field"></div>
+<div class="grain"></div>
+<div class="stars" id="stars"></div>
+
+<div class="stage" id="stage">
+  <div class="grid">
+    <div class="unit days"><div class="num" id="d">00</div><div class="lbl">days</div></div>
+    <div class="sep">:</div>
+    <div class="unit hours"><div class="num" id="h">00</div><div class="lbl">hours</div></div>
+    <div class="sep">:</div>
+    <div class="unit mins"><div class="num" id="m">00</div><div class="lbl">min</div></div>
+    <div class="sep">:</div>
+    <div class="unit secs"><div class="num" id="s">00</div><div class="lbl">sec</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+    <div class="progress-caption">
+      <span class="pct" id="pct">0%</span>
+    </div>
+  </div>
+
+  <div class="done-msg" id="done-msg">ready.</div>
+</div>
+
+<script>
+  const target = new Date('2026-09-07T09:00:00+02:00').getTime();
+  const start = target - 60 * 24 * 60 * 60 * 1000; // ventana fija de 60 días
+  const totalSpan = target - start;
+
+  const dEl = document.getElementById('d');
+  const hEl = document.getElementById('h');
+  const mEl = document.getElementById('m');
+  const sEl = document.getElementById('s');
+  const progEl = document.getElementById('progress');
+  const pctEl = document.getElementById('pct');
+  const stage = document.getElementById('stage');
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function tick() {
+    const now = Date.now();
+    const diff = target - now;
+
+    if (diff <= 0) {
+      stage.classList.add('done');
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+    dEl.textContent = pad(days);
+    hEl.textContent = pad(hours);
+    mEl.textContent = pad(mins);
+    sEl.textContent = pad(secs);
+
+    const elapsed = now - start;
+    const pct = Math.min(100, Math.max(0, (elapsed / totalSpan) * 100));
+
+    progEl.style.width = pct + '%';
+    pctEl.textContent = Math.round(pct) + '%';
+
+    setTimeout(tick, 1000);
+  }
+
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 4) + 's, ' + (Math.random() * 22) + 's';
+    starsContainer.appendChild(s);
+  }
+
+  tick();
+</script>
+
+</body>
+</html>
